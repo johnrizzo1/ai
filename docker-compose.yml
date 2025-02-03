@@ -1,44 +1,31 @@
+version: "2.1"
 services:
-  postgres:
-    image: postgres:17
-    restart: always
-    env_file: stack.env
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
-      interval: 10s
-      retries: 5
-      start_period: 30s
-      timeout: 10s
-    network_mode: service:tailscale
-  litellm:
-    image: ghcr.io/berriai/litellm-database:main-latest
-    environment:
-      PROXY_BASE_URL: http://ai.warthog-trout.ts.net:4000
-      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@ai.warthog-trout.ts.net:5432/${POSTGRES_DB}"
-      STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
-      LITELLM_LOCAL_MODEL_COST_MAP: "True" # Use /app/litellm/model_prices_and_context_window_backup.json
-      LITELLM_DROP_PARAMS: "True" # n8n set's params that might not be supported
-    # volumes:
-      # - /share/Container/LiteLLM/model_prices_and_context_window.json:/usr/local/lib/python3.13/site-packages/litellm/model_prices_and_context_window_backup.json
-    env_file: stack.env
+  blocky:
+    image: spx01/blocky
+    container_name: blocky
     restart: unless-stopped
+    # Optional the instance hostname for logging purpose
+    # hostname: dns
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+      - "4000:4000/tcp"
+    # environment:
+      # - TZ=Europe/Berlin # Optional to synchronize the log timestamp with host
+    volumes:
+      # Optional to synchronize the log timestamp with host
+      - /etc/localtime:/etc/localtime:ro
+      # config file
+      # - ./config.yml:/app/config.yml:ro
+    configs:
+      - source: blocky
+        target: /app/config.yml:ro
     network_mode: service:tailscale
 
-  open-webui:
-    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
-    container_name: open-webui
-    restart: unless-stopped
-    environment:
-      WEBUI_URL: http://ai.warthog-trout.ts.net
-    volumes:
-      - open-webui:/app/backend/data    
-    network_mode: service:tailscale
   tailscale:
     image: tailscale/tailscale:latest
-    container_name: ai-tailscale
-    hostname: ai.warthog-trout.ts.net
+    container_name: dns-tailscale
+    hostname: dns.warthog-trout.ts.net
     restart: unless-stopped
     # dns:
     #   - 192.168.2.124
@@ -46,12 +33,29 @@ services:
       - tailscale:/var/lib/tailscale
     environment:
       TS_AUTHKEY: ${TS_AUTHKEY}
-      TS_HOSTNAME: ai
+      TS_HOSTNAME: dns
       TS_STATE_DIR: /var/lib/tailscale
+
 volumes:
-  open-webui:
-  postgres_data:
   tailscale:
 
-
-
+configs:
+  blocky:
+    content: |
+      upstreams:
+        groups:
+          default:
+            - 8.8.8.8
+            - 4.4.4.4
+            - tcp-tls:fdns1.dismail.de:853
+            - https://dns.digitale-gesellschaft.ch/dns-query
+      blocking:
+        denylists:
+          ads:
+            - https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts
+        clientGroupsBlock:
+          default:
+            - ads
+      ports:
+        dns: 53
+        http: 4000

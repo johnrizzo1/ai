@@ -16,7 +16,7 @@ services:
     image: ghcr.io/berriai/litellm-database:main-latest
     environment:
       PROXY_BASE_URL: http://ai.warthog-trout.ts.net:4000
-      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
+      DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@ai.warthog-trout.ts.net:5432/${POSTGRES_DB}"
       STORE_MODEL_IN_DB: "True" # allows adding models to proxy via UI
       LITELLM_LOCAL_MODEL_COST_MAP: "True" # Use /app/litellm/model_prices_and_context_window_backup.json
       LITELLM_DROP_PARAMS: "True" # n8n set's params that might not be supported

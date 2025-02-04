@@ -27,7 +27,7 @@ services:
   litellm:
     image: ghcr.io/berriai/litellm-database:main-latest
     environment:
-      PROXY_BASE_URL: http://ai.warthog-trout.ts.net:4000
+      PROXY_BASE_URL: http://litellm.warthog-trout.ts.net:4000
       DATABASE_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres.warthog-trout.ts.net:5432/${POSTGRES_DB}"
       STORE_MODEL_IN_DB: "True"
       LITELLM_LOCAL_MODEL_COST_MAP: "True"

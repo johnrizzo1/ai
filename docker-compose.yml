@@ -34,14 +34,12 @@ services:
       LITELLM_DROP_PARAMS: "True"
     env_file: stack.env
     restart: unless-stopped
-    network_mode: service:tailscale
+    network_mode: service:ts-litellm
   ts-litellm:
     image: tailscale/tailscale:latest
     container_name: ts-litellm
     hostname: litellm.warthog-trout.ts.net
     restart: unless-stopped
-    # dns:
-    #   - 192.168.2.124
     volumes:
       - ts-litellm:/var/lib/tailscale
     environment:
@@ -58,14 +56,12 @@ services:
       WEBUI_URL: http://ai.warthog-trout.ts.net
     volumes:
       - open-webui:/app/backend/data    
-    network_mode: service:ts-openwebui
+    network_mode: service:ts-open-webui
   ts-open-webui:
     image: tailscale/tailscale:latest
     container_name: ts-open-webui
     hostname: open-webui.warthog-trout.ts.net
     restart: unless-stopped
-    # dns:
-    #   - 192.168.2.124
     volumes:
       - ts-open-webui:/var/lib/tailscale
     environment:
